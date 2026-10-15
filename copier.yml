@@ -1,0 +1,25 @@
+# Copier configuration for agentic-seed.
+# Generate a project:  uvx copier copy git@github.com-personal:aaskov/agentic-seed.git <folder>
+# Update a project:    uvx copier update
+
+_min_copier_version: "9.19.0"
+_subdirectory: template
+_preserve_symlinks: true
+
+project_name:
+  type: str
+  help: Project name. Use the repository name, for example app-oogame.
+  validator: >-
+    {% if not (project_name | regex_search('^[a-z0-9][a-z0-9-]*$')) %}
+    Use lowercase letters, digits, and hyphens only.
+    {% endif %}
+
+description:
+  type: str
+  help: One sentence that describes the project. You can leave it empty.
+  default: ""
+
+github_owner:
+  type: str
+  help: GitHub user or organization that owns the guarded paths (CODEOWNERS).
+  default: aaskov

@@ -1,0 +1,23 @@
+# Guarded paths. Only the architect changes these paths.
+#
+# This file is the single source of truth for guarded paths:
+# - GitHub uses it to request a review from the owner.
+# - .claude/hooks/guard-paths.sh blocks agent edits to these paths.
+# - check:guarded fails if a branch changes these paths.
+#
+# The hook and check:guarded read only entries that start with "/".
+# An entry that ends with "/" guards a folder. Other entries guard one file.
+
+/AGENTS.md          @{{ github_owner }}
+/CLAUDE.md          @{{ github_owner }}
+/README.md          @{{ github_owner }}
+/.copier-answers.yml  @{{ github_owner }}
+/mise.toml          @{{ github_owner }}
+/.mise/             @{{ github_owner }}
+/.claude/           @{{ github_owner }}
+/.githooks/         @{{ github_owner }}
+/.devcontainer/     @{{ github_owner }}
+/.github/           @{{ github_owner }}
+/contracts/         @{{ github_owner }}
+/docs/adr/          @{{ github_owner }}
+/tests/guardrails/  @{{ github_owner }}

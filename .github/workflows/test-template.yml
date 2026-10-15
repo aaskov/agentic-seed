@@ -1,0 +1,21 @@
+name: test-template
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+    tags: ["v*"]
+
+jobs:
+  test-template:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Install the devcontainer CLI
+        run: npm install --global @devcontainers/cli
+      - name: Generate a project and run its gate
+        env:
+          COPIER: pipx run copier==9.19.1
+        run: tests/test_template.sh
