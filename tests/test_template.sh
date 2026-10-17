@@ -52,6 +52,9 @@ fi
 echo "  ok"
 
 echo "== Gate in the devcontainer"
+# Extension point: setup runs each executable in .mise/setup.d/ (a stack uses it).
+printf '#!/usr/bin/env bash\ntouch .setup-d-ran\n' >"$project/.mise/setup.d/50-test-marker"
+chmod +x "$project/.mise/setup.d/50-test-marker"
 git -C "$project" init -q -b main
 git -C "$project" add -A
 git -C "$project" -c user.name=seed -c user.email=seed@example.invalid \
@@ -63,6 +66,17 @@ devcontainer exec --workspace-folder "$project" \
   --remote-env SEED_BRANCH=main --remote-env SEED_BASE_REF=origin/main \
   mise run check ||
   fail "The gate failed in the generated project."
+
+[ -e "$project/.setup-d-ran" ] || fail "setup did not run the scripts in .mise/setup.d/."
+
+# Extension point: check:guardrails runs each tests/guardrails/test_*.sh (a stack adds one).
+printf '#!/usr/bin/env bash\necho "extra: seeded failure"\nexit 1\n' >"$project/tests/guardrails/test_extra.sh"
+chmod +x "$project/tests/guardrails/test_extra.sh"
+if devcontainer exec --workspace-folder "$project" mise run check:guardrails >"$tmp/extra.log" 2>&1; then
+  fail "check:guardrails did not run tests/guardrails/test_extra.sh."
+fi
+grep -q "extra: seeded failure" "$tmp/extra.log" || fail "check:guardrails did not show the output of test_extra.sh."
+rm "$project/tests/guardrails/test_extra.sh"
 
 devcontainer exec --workspace-folder "$project" git config --global --get credential.https://github.com.helper &&
   fail "The bot is off, but git uses the bot credential helper."
