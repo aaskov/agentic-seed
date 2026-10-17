@@ -37,6 +37,10 @@ echo "== Files"
 grep -q '^/contracts/ *@demo-owner$' "$project/.github/CODEOWNERS" || fail "CODEOWNERS has no owner."
 grep -q '^# demo-app$' "$project/README.md" || fail "README.md has no project name."
 grep -q '^_src_path:' "$project/.copier-answers.yml" || fail ".copier-answers.yml is missing."
+# A rendered value must not change between runs, or each copier update conflicts.
+if grep -rqs 'copier\._vcs\.clone' "$project"; then
+  fail "A file holds the path of a temporary copier clone."
+fi
 [ -x "$project/.mise/tasks/check/rules" ] || fail "Task files are not executable."
 if find "$project" -name '*.jinja' | grep -q .; then
   fail "A .jinja file was copied without rendering."
