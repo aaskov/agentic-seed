@@ -53,7 +53,10 @@ git -C "$project" -c user.name=seed -c user.email=seed@example.invalid \
   -c commit.gpgsign=false commit -q -m "Generate from agentic-seed"
 devcontainer up --workspace-folder "$project" >"$tmp/up.log" 2>&1 ||
   { tail -n 40 "$tmp/up.log" >&2; fail "devcontainer up failed."; }
-devcontainer exec --workspace-folder "$project" mise run check ||
+# Use the same SEED_* variables as the CI workflow of a generated project.
+devcontainer exec --workspace-folder "$project" \
+  --remote-env SEED_BRANCH=main --remote-env SEED_BASE_REF=origin/main \
+  mise run check ||
   fail "The gate failed in the generated project."
 
 echo "test_template: ok"
