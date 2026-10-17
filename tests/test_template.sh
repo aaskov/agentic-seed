@@ -41,6 +41,7 @@ grep -q '^_src_path:' "$project/.copier-answers.yml" || fail ".copier-answers.ym
 if grep -rqs 'copier\._vcs\.clone' "$project"; then
   fail "A file holds the path of a temporary copier clone."
 fi
+grep -qx 'AGENT_BOT_APP_ID=' "$project/.devcontainer/agent-bot.env" || fail "The bot is not off by default."
 [ -x "$project/.mise/tasks/check/rules" ] || fail "Task files are not executable."
 if find "$project" -name '*.jinja' | grep -q .; then
   fail "A .jinja file was copied without rendering."
@@ -62,5 +63,8 @@ devcontainer exec --workspace-folder "$project" \
   --remote-env SEED_BRANCH=main --remote-env SEED_BASE_REF=origin/main \
   mise run check ||
   fail "The gate failed in the generated project."
+
+devcontainer exec --workspace-folder "$project" git config --global --get credential.https://github.com.helper &&
+  fail "The bot is off, but git uses the bot credential helper."
 
 echo "test_template: ok"

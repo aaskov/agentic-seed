@@ -23,3 +23,14 @@ github_owner:
   type: str
   help: GitHub user or organization that owns the guarded paths (CODEOWNERS).
   default: aaskov
+
+bot_app_id:
+  type: str
+  help: App ID of the GitHub App that agents use (docs/adr/0005). Leave it empty to turn the bot off.
+  default: ""
+
+bot_app_slug:
+  type: str
+  help: Name (slug) of that GitHub App, for example aaskov-agent-bot.
+  default: ""
+  when: "{{ bot_app_id != '' }}"
