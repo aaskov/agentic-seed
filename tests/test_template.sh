@@ -55,6 +55,8 @@ echo "== Gate in the devcontainer"
 # Extension point: setup runs each executable in .mise/setup.d/ (a stack uses it).
 printf '#!/usr/bin/env bash\ntouch .setup-d-ran\n' >"$project/.mise/setup.d/50-test-marker"
 chmod +x "$project/.mise/setup.d/50-test-marker"
+# A pinned tool must be on PATH for a plain shell, as an agent uses it.
+sed -i.bak 's/^\[tools\]$/[tools]\njq = "1.7.1"/' "$project/mise.toml" && rm "$project/mise.toml.bak"
 git -C "$project" init -q -b main
 git -C "$project" add -A
 git -C "$project" -c user.name=seed -c user.email=seed@example.invalid \
@@ -66,6 +68,10 @@ devcontainer exec --workspace-folder "$project" \
   --remote-env SEED_BRANCH=main --remote-env SEED_BASE_REF=origin/main \
   mise run check ||
   fail "The gate failed in the generated project."
+
+# A plain, non-login shell (as an agent uses) must find the pinned tool version.
+jq_version="$(devcontainer exec --workspace-folder "$project" bash -c 'jq --version' 2>/dev/null)"
+[ "$jq_version" = "jq-1.7.1" ] || fail "A plain shell does not use the pinned jq. It got '$jq_version'."
 
 [ -e "$project/.setup-d-ran" ] || fail "setup did not run the scripts in .mise/setup.d/."
 
