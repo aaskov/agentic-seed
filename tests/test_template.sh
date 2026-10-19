@@ -55,8 +55,15 @@ echo "== Gate in the devcontainer"
 # Extension point: setup runs each executable in .mise/setup.d/ (a stack uses it).
 printf '#!/usr/bin/env bash\ntouch .setup-d-ran\n' >"$project/.mise/setup.d/50-test-marker"
 chmod +x "$project/.mise/setup.d/50-test-marker"
-# A pinned tool must be on PATH for a plain shell, as an agent uses it.
-sed -i.bak 's/^\[tools\]$/[tools]\njq = "1.7.1"/' "$project/mise.toml" && rm "$project/mise.toml.bak"
+# A pinned tool must be on PATH for a plain shell in the container, as an agent uses it.
+# It is in mise.container.toml, so host mise must not see it.
+sed -i.bak 's/^\[tools\]$/[tools]\njq = "1.7.1"/' "$project/mise.container.toml" && rm "$project/mise.container.toml.bak"
+if command -v mise >/dev/null; then
+  host_tools="$(cd "$project" && MISE_ENV= MISE_TRUSTED_CONFIG_PATHS="$project" mise ls --current --no-header 2>/dev/null | awk '{print $1}')"
+  if grep -qx jq <<<"$host_tools"; then
+    fail "Host mise sees a container tool (jq). Container tools must stay in mise.container.toml."
+  fi
+fi
 git -C "$project" init -q -b main
 git -C "$project" add -A
 git -C "$project" -c user.name=seed -c user.email=seed@example.invalid \
