@@ -6,10 +6,12 @@
     "ghcr.io/anthropics/devcontainer-features/claude-code:1": {}
   },
   "remoteUser": "vscode",
-  // The bind mount needs the folder to exist, also on CI runners without a key.
-  "initializeCommand": "mkdir -p \"$HOME/.config/agent-bot\"",
+  // The bind mounts need the folders to exist, also on CI runners without a key or a token.
+  "initializeCommand": "mkdir -p \"$HOME/.config/agent-bot\" \"$HOME/.config/claude-agent\"",
   "mounts": [
-    "source=${localEnv:HOME}/.config/agent-bot,target=/mnt/agent-bot,type=bind,readonly"
+    "source=${localEnv:HOME}/.config/agent-bot,target=/mnt/agent-bot,type=bind,readonly",
+    // The Claude token for login-free agent containers (docs/adr/0006).
+    "source=${localEnv:HOME}/.config/claude-agent,target=/mnt/claude-agent,type=bind,readonly"
   ],
   "postCreateCommand": ".devcontainer/post-create.sh"
 }

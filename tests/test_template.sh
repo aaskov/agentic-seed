@@ -43,6 +43,9 @@ if grep -rqs 'copier\._vcs\.clone' "$project"; then
 fi
 grep -qx 'AGENT_BOT_APP_ID=' "$project/.devcontainer/agent-bot.env" || fail "The bot is not off by default."
 [ -x "$project/.mise/tasks/check/rules" ] || fail "Task files are not executable."
+for f in .mise/tasks/agent/start .mise/tasks/agent/finish .devcontainer/claude-auth.sh; do
+  [ -x "$project/$f" ] || fail "$f is missing or not executable."
+done
 if find "$project" -name '*.jinja' | grep -q .; then
   fail "A .jinja file was copied without rendering."
 fi
@@ -90,6 +93,16 @@ if devcontainer exec --workspace-folder "$project" mise run check:guardrails >"$
 fi
 grep -q "extra: seeded failure" "$tmp/extra.log" || fail "check:guardrails did not show the output of test_extra.sh."
 rm "$project/tests/guardrails/test_extra.sh"
+
+# The agent tasks refuse bad input before they change anything (docs/adr/0006).
+(cd "$project" && .mise/tasks/agent/start >/dev/null 2>&1) && fail "agent:start runs without an issue."
+(cd "$project" && .mise/tasks/agent/finish 999999 >"$tmp/finish.log" 2>&1) && fail "agent:finish runs for a clone that does not exist."
+grep -q "demo-app-agent-999999 does not exist" "$tmp/finish.log" || fail "agent:finish did not report the missing clone."
+
+# The Claude wrapper is in front of claude. It reports on (a token on the host) or off.
+grep -Eq "claude-auth: (on|off)\." "$tmp/up.log" || fail "post-create did not run claude-auth.sh."
+devcontainer exec --workspace-folder "$project" bash -c '[ "$(command -v claude)" = /usr/local/bin/claude ]' ||
+  fail "claude in the container is not the token wrapper."
 
 devcontainer exec --workspace-folder "$project" git config --global --get credential.https://github.com.helper &&
   fail "The bot is off, but git uses the bot credential helper."
