@@ -1,0 +1,5 @@
+# Tools for the devcontainer only. The Dockerfile sets MISE_ENV=container, so
+# mise loads this file in the container and not on the host.
+# A stack adds its tools here, with exact versions.
+
+[tools]
