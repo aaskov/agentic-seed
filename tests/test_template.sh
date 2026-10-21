@@ -99,6 +99,12 @@ rm "$project/tests/guardrails/test_extra.sh"
 (cd "$project" && .mise/tasks/agent/finish 999999 >"$tmp/finish.log" 2>&1) && fail "agent:finish runs for a clone that does not exist."
 grep -q "demo-app-agent-999999 does not exist" "$tmp/finish.log" || fail "agent:finish did not report the missing clone."
 
+# Agents use Sonnet by default. AGENT_MODEL overrides it (docs/adr/0006).
+grep -q 'model="${AGENT_MODEL:-claude-sonnet-5-5}"' "$project/.mise/tasks/agent/start" ||
+  fail "agent:start does not default to claude-sonnet-5-5 with an AGENT_MODEL override."
+grep -q 'claude --model "$model"' "$project/.mise/tasks/agent/start" ||
+  fail "agent:start does not pass the model to claude."
+
 # The Claude wrapper is in front of claude. It reports on (a token on the host) or off.
 grep -Eq "claude-auth: (on|off)\." "$tmp/up.log" || fail "post-create did not run claude-auth.sh."
 devcontainer exec --workspace-folder "$project" bash -c '[ "$(command -v claude)" = /usr/local/bin/claude ]' ||
