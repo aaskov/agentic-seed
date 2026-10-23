@@ -104,6 +104,11 @@ grep -q 'model="${AGENT_MODEL:-claude-sonnet-5-5}"' "$project/.mise/tasks/agent/
   fail "agent:start does not default to claude-sonnet-5-5 with an AGENT_MODEL override."
 grep -q 'claude --model "$model"' "$project/.mise/tasks/agent/start" ||
   fail "agent:start does not pass the model to claude."
+# Agents run in auto mode by default. AGENT_PERMISSION_MODE overrides it (docs/adr/0006).
+grep -q 'mode="${AGENT_PERMISSION_MODE:-auto}"' "$project/.mise/tasks/agent/start" ||
+  fail "agent:start does not default to auto mode with an AGENT_PERMISSION_MODE override."
+grep -q -- '--permission-mode "$mode"' "$project/.mise/tasks/agent/start" ||
+  fail "agent:start does not pass the permission mode to claude."
 
 # The Claude wrapper is in front of claude. It reports on (a token on the host) or off.
 grep -Eq "claude-auth: (on|off)\." "$tmp/up.log" || fail "post-create did not run claude-auth.sh."
